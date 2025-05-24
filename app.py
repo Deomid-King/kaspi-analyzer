@@ -54,21 +54,31 @@ if uploaded_file:
     max_date = df["Дата заказа"].max()
     date_range = st.sidebar.date_input("Период заказов", [min_date, max_date])
 
-    returns_df = df[(df["Дата заказа"] >= pd.to_datetime(date_range[0])) &
-                    (df["Дата заказа"] <= pd.to_datetime(date_range[1])) &
-                    (df["Статус"] == "Возврат")]
-    canceled_df = df[(df["Дата заказа"] >= pd.to_datetime(date_range[0])) &
-                     (df["Дата заказа"] <= pd.to_datetime(date_range[1])) &
-                     (df["Статус"] == "Отменен")]
+    returns_df = df[
+        (df["Дата заказа"] >= pd.to_datetime(date_range[0])) &
+        (df["Дата заказа"] <= pd.to_datetime(date_range[1])) &
+        (df["Статус"] == "Возврат")
+    ]
 
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("📉 **Статистика возвратов и отмен:**")
-    st.sidebar.write(f"🔁 Возвратов: {len(returns_df)} заказов на сумму {returns_df['Сумма'].sum():,.0f} ₸")
-    st.sidebar.write(f"❌ Отмен: {len(canceled_df)} заказов на сумму {canceled_df['Сумма'].sum():,.0f} ₸")
+    total_sales = df[
+        (df["Дата заказа"] >= pd.to_datetime(date_range[0])) &
+        (df["Дата заказа"] <= pd.to_datetime(date_range[1])) &
+        (df["Статус"] == "Выдан")
+    ]["Сумма"].sum()
 
-    issued_df = df[(df["Дата заказа"] >= pd.to_datetime(date_range[0])) &
-                   (df["Дата заказа"] <= pd.to_datetime(date_range[1])) &
-                   (df["Статус"] == "Выдан")]
+    html_stats = f"""
+    <div style='background-color: #f5f5f5; padding: 1em; border-radius: 8px;'>
+        <p style='margin-bottom: 0.5em;'>🔁 <strong>Возвратов:</strong> {len(returns_df)} заказов на сумму <strong>{returns_df['Сумма'].sum():,.0f} ₸</strong></p>
+        <p style='margin-bottom: 0; font-size: 1.2em;'><strong>💵 Оборот:</strong> {total_sales:,.0f} ₸</p>
+    </div>
+    """
+    st.sidebar.markdown(html_stats, unsafe_allow_html=True)
+
+    issued_df = df[
+        (df["Дата заказа"] >= pd.to_datetime(date_range[0])) &
+        (df["Дата заказа"] <= pd.to_datetime(date_range[1])) &
+        (df["Статус"] == "Выдан")
+    ]
 
     warehouses = issued_df["Склад"].dropna().unique().tolist()
     selected_warehouses = st.sidebar.multiselect("Склады", warehouses, default=warehouses)
